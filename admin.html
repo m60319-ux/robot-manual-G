@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280">
+    <title>後台管理系統</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        /* 借用首頁樣式，改為深色主題區分 */
+        body.admin-mode-landing {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #2c3e50;
+            min-width: 100vw;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .admin-container {
+            text-align: center;
+            background: white;
+            padding: 50px;
+            border-radius: 10px;
+            width: 600px;
+        }
+        .admin-btn {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .admin-btn:hover {
+            background: #e3f2fd;
+            border-color: #007bff;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body class="admin-mode-landing">
+
+    <div class="admin-container">
+        <h2 style="color:#333; margin-bottom:30px;">⚙️ 後台管理系統</h2>
+        
+        <a href="admin_faq.html" class="admin-btn">
+            🤖 管理 FAQ 故障排除
+        </a>
+        
+        <a href="admin_manual.html" class="admin-btn">
+            📖 管理 軟體操作手冊
+        </a>
+
+        <div style="margin-top:30px; border-top:1px solid #eee; padding-top:20px;">
+            <a href="index.html" style="color:#666; text-decoration:none;">⬅ 回到前台入口</a>
+        </div>
+    </div>
+
+</body>
+</html>
