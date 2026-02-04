@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280">
+    <title>軟體操作手冊 | Robot Manual</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <script src="assets/libs/fuse.min.js"></script>
+</head>
+<body>
+
+<header>
+    <div class="logo-section">
+        <a href="index.html" style="text-decoration:none; margin-right:15px; font-size:20px;" title="回首頁">🏠</a>
+        <h1>軟體操作手冊</h1>
+    </div>
+    <!-- ... Header Controls (同 FAQ) ... -->
+</header>
+
+<div class="container">
+    <div class="sidebar" id="sidebar"></div>
+    <!-- 手冊可能不需要中間的列表欄，直接是樹狀導航 -> 內容 -->
+    <!-- 這裡暫時維持三欄結構，或者您可以依需求改成雙欄 -->
+    <div class="question-list-panel" id="list-panel">
+        <div id="question-list">請選擇章節...</div>
+    </div>
+    <div class="content-panel" id="content-display">
+        <div style="text-align:center; margin-top:100px; color:#aaa;"><h2>📖 操作手冊</h2></div>
+    </div>
+</div>
+
+<script>
+    // 指定模組為 manual
+    window.CurrentModule = 'manual'; 
+</script>
+<script src="assets/app.js"></script>
+
+</body>
+</html>
