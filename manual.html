@@ -9,6 +9,16 @@
     <link rel="icon" href="data:,">
     <!-- 引入 Fuse.js 搜尋引擎 -->
     <script src="assets/libs/fuse.min.js"></script>
+    <style>
+        /* ✨✨✨ 特別樣式調整：移除綠色圓點 ✨✨✨ */
+        /* 覆蓋 styles.css 中 .step-item::before 的設定 */
+        .step-item::before {
+            content: none !important; /* 移除圓點符號 */
+        }
+        .step-item {
+            padding-left: 0 !important; /* 移除原本為了圓點預留的左側內距 */
+        }
+    </style>
 </head>
 <body>
 
@@ -25,7 +35,7 @@
         <h1>軟體操作手冊</h1>
     </div>
     
-    <!-- Header 右側控制區 (語言 & 設定) -->
+    <!-- Header 右側控制區 (搜尋 & 語言 & 設定) -->
     <div class="header-controls">
         <!-- 1. 搜尋欄 -->
         <div class="header-search">
@@ -57,12 +67,12 @@
 <!-- 三欄式主內容區 -->
 <div class="container">
     
-    <!-- 第一欄：章節導覽 -->
+    <!-- 第一欄：章節導覽 (主章節 > 子章節) -->
     <div class="sidebar" id="sidebar">
         <!-- JS 動態生成 -->
     </div>
 
-    <!-- 第二欄：頁面列表 -->
+    <!-- 第二欄：頁面列表 (頁面) -->
     <div class="question-list-panel" id="list-panel">
         <div id="question-list">
             <div style="padding:40px 20px; text-align:center; color:#999;">
@@ -99,7 +109,7 @@
     function checkAdminPass() {
         const password = prompt("請輸入管理員密碼：");
         if (password === "DeltaFAE") {
-            // 導向後台入口 (或是直接導向 admin_manual.html)
+            // 導向後台入口
             window.location.href = "admin.html"; 
         } else if (password !== null) {
             alert("❌ 密碼錯誤！");
