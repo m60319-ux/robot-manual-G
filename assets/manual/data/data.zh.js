@@ -33,8 +33,8 @@ window.FAQ_DATA_ZH = {
                     }
                 },
                 {
-                    "id": "SUB-0971",
-                    "title": "New Section",
+                    "id": "SUB-103",
+                    "title": "初始頁面",
                     "content": {
                         "symptoms": [],
                         "rootCauses": [],
@@ -42,7 +42,19 @@ window.FAQ_DATA_ZH = {
                         "keywords": [],
                         "notes": ""
                     },
-                    "questions": []
+                    "questions": [
+                        {
+                            "id": "PAGE-0649",
+                            "title": "New Page",
+                            "content": {
+                                "symptoms": [],
+                                "rootCauses": [],
+                                "solutionSteps": [],
+                                "keywords": [],
+                                "notes": ""
+                            }
+                        }
+                    ]
                 }
             ],
             "content": {
