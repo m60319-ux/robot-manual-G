@@ -9,7 +9,7 @@
 </head>
 <body class="admin-mode">
 
-    <!-- 第一欄：設定與分類樹 -->
+    <!-- 第一欄：設定與目錄樹 (管理 第一層 & 第二層) -->
     <aside id="admin-sidebar">
         <div style="padding: 10px; background:#f8f9fa; border-bottom:1px solid #ddd;">
             <a href="admin.html" class="btn-back">⬅ 返回後台首頁</a>
@@ -64,7 +64,7 @@
             <p style="font-size:11px; color:#666; margin:3px 0 0 0;">* 讀寫位置: assets/manual/data/</p>
         </div>
 
-        <!-- 分類樹 -->
+        <!-- 目錄樹 -->
         <div id="tree-wrapper">
             <div id="tree-root">
                 <p style="padding:20px; color:#999; text-align:center; font-size:14px;">
@@ -74,14 +74,14 @@
         </div>
     </aside>
 
-    <!-- 第二欄：頁面列表 -->
+    <!-- 第二欄：頁面列表 (管理 第三層) -->
     <div id="admin-list-panel" class="question-list-panel">
         <div class="search-box">
             <input type="text" id="list-filter" placeholder="🔍 篩選頁面..." oninput="filterQuestionList(this.value)">
         </div>
         <div id="list-root">
             <div style="padding:40px 20px; text-align:center; color:#999;">
-                請點選左側<br>📂 子章節
+                請點選左側<br>📂 子章節 (第二層)
             </div>
         </div>
     </div>
@@ -90,9 +90,10 @@
     <main id="admin-main">
         <div class="main-toolbar">
             <div class="group-left">
-                <button onclick="addNode('cat')" class="btn-gray">➕ 主章節</button>
-                <button onclick="addNode('sub')" class="btn-gray">➕ 子章節</button>
-                <button onclick="addNode('q')" class="btn-blue">➕ 新增頁面</button>
+                <!-- 這些按鈕現在可以在任何層級使用，系統會自動判斷位置 -->
+                <button onclick="addNode('cat')" class="btn-gray" title="新增第一層章節">➕ 1. 主章節</button>
+                <button onclick="addNode('sub')" class="btn-gray" title="在當前主章節下新增子章節">➕ 2. 子章節</button>
+                <button onclick="addNode('q')" class="btn-blue" title="在當前子章節下新增頁面">➕ 3. 新增頁面</button>
             </div>
             <div class="group-right">
                 <button onclick="deleteNode()" class="btn-red">🗑️ 刪除</button>
@@ -104,18 +105,19 @@
         <div class="card" id="editor-panel" style="display:none;">
             <h2>編輯內容 <span id="node-type" style="font-size:0.5em; background:#eee; padding:2px;"></span></h2>
             
+            <!-- 移動選單 (僅針對頁面顯示) -->
             <div id="div-move-group" style="margin-bottom: 15px; display: none; background: #e3f2fd; padding: 10px; border-radius: 4px;">
                 <label style="color:#0056b3;">📂 所屬章節 (移動至...)</label>
                 <select id="inp-parent-sub" style="width:100%; padding:8px; border:1px solid #007bff;"></select>
             </div>
 
-            <label>ID (頁面編號)</label><input type="text" id="inp-id">
-            <label>標題 / 功能名稱</label><input type="text" id="inp-title">
+            <label>ID (編號)</label><input type="text" id="inp-id">
+            <label>標題 / 名稱</label><input type="text" id="inp-title">
             
+            <!-- 編輯區 (所有層級共用，但 Label 用語可通用) -->
             <div id="q-fields" style="display:none;">
                 <div class="hint">💡 提示：在輸入框按 <b>Ctrl+V</b> 可直接貼上圖片</div>
                 
-                <!-- 雖然 ID 維持不變以相容 JS，但 Label 改為適合手冊的用語 -->
                 <label>功能概述 / 主要內容 (Main Content)</label>
                 <div id="container-symptoms" class="list-editor-container"></div>
                 
@@ -143,7 +145,7 @@
         </div>
     </main>
 
-    <!-- ✨✨✨ 關鍵設定：指定本頁面管理 'manual' 模組 ✨✨✨ -->
+    <!-- 指定管理手冊模組 -->
     <script>
         window.ModuleConfig = {
             name: 'manual',
