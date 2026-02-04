@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280">
+    <title>機器人技術支援中心 | Robot Support Center</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        /* 首頁專用樣式 */
+        body.landing-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-width: 100vw;
+            height: 100vh;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .landing-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 60px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .landing-title {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .landing-subtitle {
+            color: #7f8c8d;
+            margin-bottom: 50px;
+            font-size: 1.1rem;
+        }
+
+        .card-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .module-card {
+            background: white;
+            width: 260px;
+            padding: 40px 20px;
+            border-radius: 15px;
+            border: 2px solid transparent;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .module-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            border-color: #3498db;
+        }
+
+        .card-icon { font-size: 60px; margin-bottom: 20px; }
+        .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
+        .card-desc { font-size: 0.9rem; color: #95a5a6; line-height: 1.5; }
+        
+        .footer-info { margin-top: 50px; font-size: 0.8rem; color: #aaa; }
+        
+        /* 管理員登入按鈕 (右下角) */
+        .admin-login-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: none;
+            border: 1px solid #ccc;
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: #999;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        .admin-login-btn:hover { border-color: #333; color: #333; }
+    </style>
+</head>
+<body class="landing-page">
+
+    <div class="landing-container">
+        <div class="landing-title">機器人技術支援中心</div>
+        <div class="landing-subtitle">Robot Technical Support Center</div>
+
+        <div class="card-container">
+            <!-- 模組 1: FAQ -->
+            <a href="faq.html" class="module-card">
+                <div class="card-icon">🤖</div>
+                <div class="card-title">故障排除 FAQ</div>
+                <div class="card-desc">
+                    硬體與軟體異常排查<br>
+                    錯誤代碼查詢與解決方案
+                </div>
+            </a>
+
+            <!-- 模組 2: 操作手冊 -->
+            <a href="manual.html" class="module-card">
+                <div class="card-icon">📖</div>
+                <div class="card-title">軟體操作手冊</div>
+                <div class="card-desc">
+                    軟體功能說明文件<br>
+                    操作流程教學 (建置中)
+                </div>
+            </a>
+        </div>
+
+        <div class="footer-info">
+            &copy; 2026 Robot Support Team. All rights reserved.
+        </div>
+    </div>
+
+    <!-- 管理後台入口 -->
+    <button onclick="checkAdminPass()" class="admin-login-btn">⚙️ 管理後台</button>
+
+    <script>
+        function checkAdminPass() {
+            const password = prompt("請輸入管理員密碼：");
+            if (password === "DeltaFAE") {
+                window.location.href = "admin.html";
+            } else if (password !== null) {
+                alert("❌ 密碼錯誤！");
+            }
+        }
+    </script>
+
+</body>
+</html>
