@@ -1,11 +1,10 @@
-// assets/app.js - V3.0 Module Support (FAQ/Manual)
+// assets/app.js - V4.0 View Content at All Levels
 let currentLang = 'zh';
 let faqData = {}; 
 let fuse; 
-let activeSub = null; // 當前選中的子分類物件
-let activeQ = null;   // 當前選中的問題物件
+let activeSub = null;
+let activeQ = null;   
 
-// ✨✨✨ 讀取當前模組設定 (預設 FAQ) ✨✨✨
 const currentModule = window.CurrentModule || 'faq';
 
 const DATA_VAR_MAP = {
@@ -47,14 +46,12 @@ window.toggleLangMenu = function(e) {
     document.getElementById('lang-menu').classList.toggle('show');
 }
 
-// ✨✨✨ 修改：動態載入模組資料 ✨✨✨
 function loadDataScripts() {
     const langs = ['zh', 'cn', 'en', 'th'];
     const version = new Date().getTime();
     const promises = langs.map(lang => {
         return new Promise((resolve) => {
             const script = document.createElement('script');
-            // 路徑改為 assets/[module]/data/...
             script.src = `assets/${currentModule}/data/data.${lang}.js?v=${version}`;
             script.onload = resolve;
             script.onerror = resolve; 
@@ -72,7 +69,7 @@ function initApp() {
         initSearchIndex();
         updateLangButtons();
     } else {
-        document.getElementById('sidebar').innerHTML = '<p style="padding:20px">載入資料失敗 (請檢查檔案路徑)</p>';
+        document.getElementById('sidebar').innerHTML = '<p style="padding:20px">載入資料失敗</p>';
     }
 }
 
@@ -141,6 +138,7 @@ function highlightSidebar(catId, subId) {
     }
 }
 
+// ✨✨✨ 修改：渲染側邊欄，支援顯示第一層內容 ✨✨✨
 function renderSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.innerHTML = '';
@@ -167,6 +165,8 @@ function renderSidebar() {
 
                 subDiv.onclick = (e) => {
                     e.stopPropagation();
+                    // ✨ 點擊子分類：載入子分類的內容 + 列表
+                    renderContent(sub); 
                     loadQuestions(sub, subDiv);
                 };
                 subList.appendChild(subDiv);
@@ -176,6 +176,10 @@ function renderSidebar() {
         catDiv.onclick = () => {
             document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
             catDiv.classList.add('active');
+            // ✨ 點擊主分類：載入主分類的內容
+            renderContent(cat);
+            // 清空列表欄 (因為主分類可能沒有直接的 questions，列表留給子分類用)
+            document.getElementById('question-list').innerHTML = '<div style="padding:20px; text-align:center; color:#999;">請選擇子章節</div>';
         };
 
         sidebar.appendChild(catDiv);
@@ -195,7 +199,7 @@ function loadQuestions(sub, subDivElement) {
     listPanel.innerHTML = '';
 
     if (!sub.questions || sub.questions.length === 0) {
-        listPanel.innerHTML = '<div style="padding:20px; text-align:center;">(此分類無問題)</div>';
+        listPanel.innerHTML = '<div style="padding:20px; text-align:center;">(無頁面)</div>';
         return;
     }
 
@@ -226,9 +230,9 @@ function createQuestionItem(q, container, showPath = false) {
     container.appendChild(item);
 }
 
-function renderContent(q) {
+function renderContent(node) {
     const display = document.getElementById('content-display');
-    const c = q.content || {};
+    const c = node.content || {}; // 支援 cat/sub/q 的 content
     const labels = UI_LABELS[currentLang] || UI_LABELS['en'];
 
     const processText = (text) => {
@@ -247,8 +251,8 @@ function renderContent(q) {
 
     display.innerHTML = `
         <div class="content-card">
-            <h1 style="color:#2c3e50; margin-bottom:10px;">${q.title}</h1>
-            <div style="color:#888; font-size:0.9em; margin-bottom:15px;">ID: ${q.id}</div>
+            <h1 style="color:#2c3e50; margin-bottom:10px;">${node.title}</h1>
+            <div style="color:#888; font-size:0.9em; margin-bottom:15px;">ID: ${node.id}</div>
             <div style="margin-bottom:25px;">${keywordsHtml}</div>
 
             <h3 class="section-title" style="color:#e74c3c;">${labels.symptoms}</h3>
