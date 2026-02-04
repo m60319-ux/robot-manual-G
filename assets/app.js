@@ -1,4 +1,4 @@
-// assets/app.js - V4.0 View Content at All Levels
+// assets/app.js - V4.1 Module-Specific UI Labels
 let currentLang = 'zh';
 let faqData = {}; 
 let fuse; 
@@ -13,11 +13,20 @@ const DATA_VAR_MAP = {
 
 const SEARCH_KEYS = ['id', 'title', 'content.keywords', 'content.symptoms'];
 
+// ✨✨✨ 修改：區分 FAQ 與 Manual 的顯示標籤 ✨✨✨
 const UI_LABELS = {
-    'zh': { symptoms: '🛑 異常徵兆 (Symptoms)', rootCauses: '🔍 可能原因 (Root Causes)', solutions: '🛠️ 排查與解決 (Solution)', note: '備註' },
-    'cn': { symptoms: '🛑 异常征兆 (Symptoms)', rootCauses: '🔍 可能原因 (Root Causes)', solutions: '🛠️ 排查与解决 (Solution)', note: '备注' },
-    'en': { symptoms: '🛑 Symptoms', rootCauses: '🔍 Root Causes', solutions: '🛠️ Solution', note: 'Note' },
-    'th': { symptoms: '🛑 อาการ (Symptoms)', rootCauses: '🔍 สาเหตุ (Root Causes)', solutions: '🛠️ วิธีแก้ไข (Solution)', note: 'หมายเหตุ' }
+    'faq': {
+        'zh': { label1: '🛑 異常徵兆 (Symptoms)', label2: '🔍 可能原因 (Root Causes)', label3: '🛠️ 排查與解決 (Solution)', note: '備註' },
+        'cn': { label1: '🛑 异常征兆 (Symptoms)', label2: '🔍 可能原因 (Root Causes)', label3: '🛠️ 排查与解决 (Solution)', note: '备注' },
+        'en': { label1: '🛑 Symptoms', label2: '🔍 Root Causes', label3: '🛠️ Solution', note: 'Note' },
+        'th': { label1: '🛑 อาการ (Symptoms)', label2: '🔍 สาเหตุ (Root Causes)', label3: '🛠️ วิธีแก้ไข (Solution)', note: 'หมายเหตุ' }
+    },
+    'manual': {
+        'zh': { label1: '📝 功能概述 (Description)', label2: '⚙️ 詳細參數 (Details)', label3: '👣 操作步驟 (Steps)', note: '備註' },
+        'cn': { label1: '📝 功能概述 (Description)', label2: '⚙️ 详细参数 (Details)', label3: '👣 操作步骤 (Steps)', note: '备注' },
+        'en': { label1: '📝 Description', label2: '⚙️ Details', label3: '👣 Steps', note: 'Note' },
+        'th': { label1: '📝 คำอธิบาย (Description)', label2: '⚙️ รายละเอียด (Details)', label3: '👣 ขั้นตอน (Steps)', note: 'หมายเหตุ' }
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -138,7 +147,6 @@ function highlightSidebar(catId, subId) {
     }
 }
 
-// ✨✨✨ 修改：渲染側邊欄，支援顯示第一層內容 ✨✨✨
 function renderSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.innerHTML = '';
@@ -165,7 +173,6 @@ function renderSidebar() {
 
                 subDiv.onclick = (e) => {
                     e.stopPropagation();
-                    // ✨ 點擊子分類：載入子分類的內容 + 列表
                     renderContent(sub); 
                     loadQuestions(sub, subDiv);
                 };
@@ -176,9 +183,7 @@ function renderSidebar() {
         catDiv.onclick = () => {
             document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
             catDiv.classList.add('active');
-            // ✨ 點擊主分類：載入主分類的內容
             renderContent(cat);
-            // 清空列表欄 (因為主分類可能沒有直接的 questions，列表留給子分類用)
             document.getElementById('question-list').innerHTML = '<div style="padding:20px; text-align:center; color:#999;">請選擇子章節</div>';
         };
 
@@ -230,10 +235,14 @@ function createQuestionItem(q, container, showPath = false) {
     container.appendChild(item);
 }
 
+// ✨✨✨ 修改：根據模組選取正確標籤 ✨✨✨
 function renderContent(node) {
     const display = document.getElementById('content-display');
-    const c = node.content || {}; // 支援 cat/sub/q 的 content
-    const labels = UI_LABELS[currentLang] || UI_LABELS['en'];
+    const c = node.content || {}; 
+    
+    // 根據 currentModule 選擇 FAQ 或 Manual 的標籤組
+    const moduleLabels = UI_LABELS[currentModule] || UI_LABELS['faq'];
+    const labels = moduleLabels[currentLang] || moduleLabels['en'];
 
     const processText = (text) => {
         if (!text) return "";
@@ -249,26 +258,47 @@ function renderContent(node) {
 
     const keywordsHtml = (c.keywords || []).map(k => `<span class="keyword-tag">#${k}</span>`).join('');
 
+    // 注意：這裡將 key 對應到了 label1, label2, label3
+    // FAQ: label1=Symptoms, label2=Causes, label3=Solution
+    // Manual: label1=Description, label2=Details, label3=Steps
+    
     display.innerHTML = `
         <div class="content-card">
             <h1 style="color:#2c3e50; margin-bottom:10px;">${node.title}</h1>
             <div style="color:#888; font-size:0.9em; margin-bottom:15px;">ID: ${node.id}</div>
             <div style="margin-bottom:25px;">${keywordsHtml}</div>
 
-            <h3 class="section-title" style="color:#e74c3c;">${labels.symptoms}</h3>
+            <h3 class="section-title" style="color:#0056b3;">${labels.label1}</h3>
             <div class="info-block symptoms">
                 ${renderList(c.symptoms)}
             </div>
 
-            <h3 class="section-title" style="color:#f39c12;">${labels.rootCauses}</h3>
-            <div class="info-block causes">
-                ${renderList(c.rootCauses)}
-            </div>
+            <!-- 手冊模式下，通常 Steps 放最後，或者 Details 放最後，這邊依照 Admin 介面順序微調 -->
+            <!-- 假設 admin_manual 順序是: 1.概述 2.步驟 3.參數 -->
+            <!-- 我們的 Data Structure 對應: symptoms=概述, solutionSteps=步驟, rootCauses=參數 -->
+            
+            ${currentModule === 'manual' ? `
+                <h3 class="section-title" style="color:#0056b3;">${labels.label3}</h3>
+                <div class="info-block steps">
+                    ${renderList(c.solutionSteps)}
+                </div>
 
-            <h3 class="section-title" style="color:#27ae60;">${labels.solutions}</h3>
-            <div class="info-block steps">
-                ${renderList(c.solutionSteps)}
-            </div>
+                <h3 class="section-title" style="color:#0056b3;">${labels.label2}</h3>
+                <div class="info-block causes">
+                    ${renderList(c.rootCauses)}
+                </div>
+            ` : `
+                <!-- FAQ 模式維持原樣 -->
+                <h3 class="section-title" style="color:#e74c3c;">${labels.label2}</h3>
+                <div class="info-block causes">
+                    ${renderList(c.rootCauses)}
+                </div>
+
+                <h3 class="section-title" style="color:#27ae60;">${labels.label3}</h3>
+                <div class="info-block steps">
+                    ${renderList(c.solutionSteps)}
+                </div>
+            `}
 
             ${c.notes ? `<div style="margin-top:30px; padding:15px; background:#fff3cd; border-radius:4px; color:#856404;">📝 <b>${labels.note}:</b><br>${processText(c.notes)}</div>` : ''}
         </div>
