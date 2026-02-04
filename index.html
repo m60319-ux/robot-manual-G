@@ -16,6 +16,7 @@
             height: 100vh;
             flex-direction: column;
             overflow: hidden;
+            position: relative; /* 為了絕對定位的元素 */
         }
 
         .landing-container {
@@ -89,30 +90,59 @@
             text-decoration: none;
         }
         .admin-login-btn:hover { border-color: #333; color: #333; }
+
+        /* 語言切換區 (右上角) */
+        .lang-switch-container {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+        }
+        /* 覆寫部分樣式以適應首頁背景 */
+        .lang-btn { color: #555; }
+        .lang-btn:hover { background: rgba(0,0,0,0.05); }
     </style>
 </head>
 <body class="landing-page">
 
+    <!-- 語言切換 -->
+    <div class="lang-switch-container">
+        <div class="lang-dropdown">
+            <button onclick="toggleLangMenu(event)" class="lang-btn" title="Language">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+            </button>
+            <div id="lang-menu" class="lang-menu">
+                <div onclick="changeLang('zh')" class="lang-option" id="opt-zh">繁體中文</div>
+                <div onclick="changeLang('cn')" class="lang-option" id="opt-cn">简体中文</div>
+                <div onclick="changeLang('en')" class="lang-option" id="opt-en">English</div>
+                <div onclick="changeLang('th')" class="lang-option" id="opt-th">ไทย</div>
+            </div>
+        </div>
+    </div>
+
     <div class="landing-container">
-        <div class="landing-title">機器人技術支援中心</div>
-        <div class="landing-subtitle">Robot Technical Support Center</div>
+        <div class="landing-title" id="txt-title">機器人技術支援中心</div>
+        <div class="landing-subtitle" id="txt-subtitle">Robot Technical Support Center</div>
 
         <div class="card-container">
             <!-- 模組 1: FAQ -->
-            <a href="faq.html" class="module-card">
+            <a href="#" onclick="goToPage('faq.html')" class="module-card">
                 <div class="card-icon">🤖</div>
-                <div class="card-title">故障排除 FAQ</div>
-                <div class="card-desc">
+                <div class="card-title" id="txt-faq-title">故障排除 FAQ</div>
+                <div class="card-desc" id="txt-faq-desc">
                     硬體與軟體異常排查<br>
                     錯誤代碼查詢與解決方案
                 </div>
             </a>
 
             <!-- 模組 2: 操作手冊 -->
-            <a href="manual.html" class="module-card">
+            <a href="#" onclick="goToPage('manual.html')" class="module-card">
                 <div class="card-icon">📖</div>
-                <div class="card-title">軟體操作手冊</div>
-                <div class="card-desc">
+                <div class="card-title" id="txt-manual-title">軟體操作手冊</div>
+                <div class="card-desc" id="txt-manual-desc">
                     軟體功能說明文件<br>
                     操作流程教學 (建置中)
                 </div>
@@ -125,9 +155,103 @@
     </div>
 
     <!-- 管理後台入口 -->
-    <button onclick="checkAdminPass()" class="admin-login-btn">⚙️ 管理後台</button>
+    <button onclick="checkAdminPass()" class="admin-login-btn" id="btn-admin">⚙️ 管理後台</button>
 
     <script>
+        // 語言資料庫
+        const i18n = {
+            'zh': {
+                title: '機器人技術支援中心',
+                subtitle: 'Robot Technical Support Center',
+                faqTitle: '故障排除 FAQ',
+                faqDesc: '硬體與軟體異常排查<br>錯誤代碼查詢與解決方案',
+                manualTitle: '軟體操作手冊',
+                manualDesc: '軟體功能說明文件<br>操作流程教學 (建置中)',
+                adminBtn: '⚙️ 管理後台'
+            },
+            'cn': {
+                title: '机器人技术支持中心',
+                subtitle: 'Robot Technical Support Center',
+                faqTitle: '故障排除 FAQ',
+                faqDesc: '硬件与软件异常排查<br>错误代码查询与解决方案',
+                manualTitle: '软件操作手册',
+                manualDesc: '软件功能说明文件<br>操作流程教学 (建置中)',
+                adminBtn: '⚙️ 管理后台'
+            },
+            'en': {
+                title: 'Robot Support Center',
+                subtitle: 'Technical Support & Documentation',
+                faqTitle: 'Troubleshooting FAQ',
+                faqDesc: 'Hardware & Software Issues<br>Error Codes & Solutions',
+                manualTitle: 'Operation Manual',
+                manualDesc: 'Software Documentation<br>Operation Tutorials (Coming Soon)',
+                adminBtn: '⚙️ Admin Panel'
+            },
+            'th': {
+                title: 'ศูนย์สนับสนุนด้านเทคนิคหุ่นยนต์',
+                subtitle: 'Robot Technical Support Center',
+                faqTitle: 'คำถามที่พบบ่อย (FAQ)',
+                faqDesc: 'การแก้ไขปัญหาฮาร์ดแวร์และซอฟต์แวร์<br>รหัสข้อผิดพลาดและแนวทางแก้ไข',
+                manualTitle: 'คู่มือการใช้งาน',
+                manualDesc: 'เอกสารประกอบซอฟต์แวร์<br>บทช่วยสอนการใช้งาน (เร็วๆ นี้)',
+                adminBtn: '⚙️ ผู้ดูแลระบบ'
+            }
+        };
+
+        let currentLang = 'zh';
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 讀取上次選擇的語言 (如果有的話)
+            const savedLang = localStorage.getItem('app_lang');
+            if (savedLang && i18n[savedLang]) {
+                currentLang = savedLang;
+            }
+            updateUI();
+
+            // 點擊外部關閉選單
+            window.addEventListener('click', () => {
+                const menu = document.getElementById('lang-menu');
+                if (menu) menu.classList.remove('show');
+            });
+        });
+
+        // 切換選單顯示
+        function toggleLangMenu(e) {
+            e.stopPropagation();
+            document.getElementById('lang-menu').classList.toggle('show');
+        }
+
+        // 變更語言
+        function changeLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('app_lang', lang); // 存入 LocalStorage 供其他頁面讀取
+            updateUI();
+            document.getElementById('lang-menu').classList.remove('show');
+        }
+
+        // 更新介面文字
+        function updateUI() {
+            const texts = i18n[currentLang];
+            document.getElementById('txt-title').innerText = texts.title;
+            document.getElementById('txt-subtitle').innerText = texts.subtitle;
+            document.getElementById('txt-faq-title').innerText = texts.faqTitle;
+            document.getElementById('txt-faq-desc').innerHTML = texts.faqDesc;
+            document.getElementById('txt-manual-title').innerText = texts.manualTitle;
+            document.getElementById('txt-manual-desc').innerHTML = texts.manualDesc;
+            document.getElementById('btn-admin').innerText = texts.adminBtn;
+
+            // 更新選單高亮
+            document.querySelectorAll('.lang-option').forEach(opt => opt.classList.remove('active'));
+            const activeOpt = document.getElementById(`opt-${currentLang}`);
+            if(activeOpt) activeOpt.classList.add('active');
+        }
+
+        // 跳轉頁面 (帶入語言參數，雖然有 LocalStorage 但帶參數保險)
+        function goToPage(page) {
+            window.location.href = `${page}?lang=${currentLang}`;
+        }
+
         function checkAdminPass() {
             const password = prompt("請輸入管理員密碼：");
             if (password === "DeltaFAE") {
