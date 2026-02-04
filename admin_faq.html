@@ -1,68 +1,22 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=1280">
-    <title>故障排除助手 | FAQ</title>
-    <link rel="stylesheet" href="assets/styles.css">
-    <link rel="icon" href="data:,">
-    <script src="assets/libs/fuse.min.js"></script>
-</head>
-<body>
-
-<header>
-    <div class="logo-section">
-        <!-- 回首頁 -->
-        <a href="index.html" style="text-decoration:none; margin-right:15px; font-size:20px;" title="回入口首頁">🏠</a>
-        
-        <img src="assets/images/logo.png" alt="Logo" class="header-logo" 
-             onerror="this.style.display='none'; document.getElementById('fallback-icon').style.display='block';">
-        <span id="fallback-icon" style="display:none; font-size:24px; margin-right:10px;">🤖</span>
-        
-        <h1>機器人故障排除助手 (FAQ)</h1>
-    </div>
-    
-    <div class="header-controls">
-        <div class="header-search">
-            <input type="text" id="search-input" placeholder="🔍 搜尋代碼、關鍵字...">
+<!-- ... 前面 header ... -->
+<body class="admin-mode">
+    <aside id="admin-sidebar">
+        <div style="padding: 10px; background:#f8f9fa; border-bottom:1px solid #ddd;">
+            <a href="admin.html" class="btn-back">⬅ 返回後台首頁</a>
         </div>
-
-        <div class="lang-dropdown">
-            <button onclick="toggleLangMenu(event)" class="lang-btn" title="切換語言">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-            </button>
-            <div id="lang-menu" class="lang-menu">
-                <div onclick="setLang('zh')" class="lang-option" id="opt-zh">繁體中文</div>
-                <div onclick="setLang('cn')" class="lang-option" id="opt-cn">简体中文</div>
-                <div onclick="setLang('en')" class="lang-option" id="opt-en">English</div>
-                <div onclick="setLang('th')" class="lang-option" id="opt-th">ไทย</div>
-            </div>
-        </div>
-    </div>
-</header>
-
-<div class="container">
-    <div class="sidebar" id="sidebar"></div>
-    <div class="question-list-panel" id="list-panel">
-        <div id="question-list">
-            <div style="padding:40px 20px; text-align:center; color:#999;">請點選左側<br>📂 子分類</div>
-        </div>
-    </div>
-    <div class="content-panel" id="content-display">
-        <div style="text-align:center; margin-top:100px; color:#aaa;"><h2>👋 歡迎使用</h2></div>
-    </div>
-</div>
-
-<div class="fullscreen-overlay" id="fs-overlay" onclick="closeFullscreen()">
-    <img id="fs-img" src="">
-</div>
-
-<!-- ⚠️ 注意：這裡需要修改 app.js 讓它支援動態路徑，或者在這裡指定 module="faq" -->
-<script>
-    // 設定目前模組的資料路徑
-    window.CurrentModule = 'faq'; 
-</script>
-<script src="assets/app.js"></script>
-
+        <!-- ... 中間省略 ... -->
+        <!-- GitHub 說明文字修正 -->
+        <p style="font-size:11px; color:#666; margin:3px 0 0 0;">* 讀寫位置: assets/faq/data/</p>
+    </aside>
+    <!-- ... 中間省略 ... -->
+    <script>
+        // ✨ 設定此頁面的模組路徑
+        window.ModuleConfig = {
+            name: 'faq',
+            dataPath: 'assets/faq/data/',
+            imgPath: 'assets/faq/images/'
+        };
+    </script>
+    <script src="assets/admin.js"></script>
 </body>
 </html>
