@@ -1,4 +1,4 @@
-// assets/admin.js - V6.0 Module Support (FAQ/Manual)
+// assets/admin.js - V6.1 Module Support & Visual Editor
 let currentMode = 'local';
 let currentData = null;
 let currentVarName = "FAQ_DATA_ZH";
@@ -10,7 +10,6 @@ let currentSubNode = null;
 let localHandle = null;
 
 // ✨✨✨ 模組設定 (Module Configuration) ✨✨✨
-// 預設值為 FAQ，若 HTML 有定義 window.ModuleConfig 則覆蓋
 let config = {
     name: 'faq',
     dataPath: 'assets/faq/data/',
@@ -19,7 +18,7 @@ let config = {
 
 if (window.ModuleConfig) {
     config = { ...config, ...window.ModuleConfig };
-    console.log(`[Admin] Loaded Module: ${config.name}`);
+    console.log(`[Admin] Loaded Module Config: ${config.name}`);
 }
 
 // 初始化
@@ -71,7 +70,12 @@ function parseAndRender(text) {
         currentSubNode = null;
         renderTree();
         renderQuestionList();
+        
+        // 切換顯示狀態
         document.getElementById('editor-panel').style.display = 'none';
+        const msg = document.getElementById('empty-editor-msg');
+        if(msg) msg.style.display = 'block';
+
     } catch(e) {
         console.error(e);
         alert(`資料格式錯誤:\n${e.message}`);
@@ -79,7 +83,7 @@ function parseAndRender(text) {
 }
 
 // -----------------------------------------------------------
-// 可視化列表編輯器 (Visual List Editor)
+// 可視化列表編輯器
 // -----------------------------------------------------------
 
 function renderListEditor(containerId, dataArray) {
@@ -248,8 +252,8 @@ async function openImageGallery(targetRow) {
     let images = [];
     try {
         if (currentMode === 'local' && localHandle) {
-            // ✨ 本機模式：讀取 assets -> [module] -> images
             try {
+                // ✨ 讀取 assets/[module]/images
                 const imgDir = await localHandle.getDirectoryHandle('assets')
                                                 .then(d => d.getDirectoryHandle(config.name))
                                                 .then(d => d.getDirectoryHandle('images'));
@@ -258,7 +262,6 @@ async function openImageGallery(targetRow) {
                     if (entry.kind === 'file' && /\.(png|jpg|jpeg|gif|webp)$/i.test(entry.name)) {
                         const file = await entry.getFile();
                         const blobUrl = URL.createObjectURL(file);
-                        // 儲存時使用相對路徑
                         images.push({ 
                             name: entry.name, 
                             url: `${config.imgPath}${entry.name}`, 
@@ -271,13 +274,11 @@ async function openImageGallery(targetRow) {
                 return;
             }
         } else if (currentMode === 'github') {
-            // ✨ GitHub 模式：讀取 assets/[module]/images
             const token = document.getElementById('gh_token').value.trim();
             const user = document.getElementById('gh_user').value.trim();
             const repo = document.getElementById('gh_repo').value.trim();
             if(!token) throw new Error("請先設定 GitHub Token");
             
-            // 移除尾部斜線以符合 GitHub API 格式
             const apiPath = config.imgPath.replace(/\/$/, '');
             const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${apiPath}`;
             
@@ -346,7 +347,10 @@ function loadEditor(item, type, arr, idx) {
     activeParent = { array: arr, index: idx };
 
     const panel = document.getElementById('editor-panel');
+    const msg = document.getElementById('empty-editor-msg');
+    
     panel.style.display = 'block';
+    if(msg) msg.style.display = 'none';
     
     document.getElementById('node-type').textContent = type.toUpperCase();
     document.getElementById('inp-id').value = item.id || '';
@@ -452,13 +456,11 @@ async function handleGlobalPaste(e) {
     if(!confirm("偵測到圖片，確定上傳？")) return;
     
     const filename = `img_${Date.now()}.png`;
-    // ✨ 使用 config.imgPath
     const path = `${config.imgPath}${filename}`;
     const imgTag = `{{img:${path}}}`;
 
     try {
         if(currentMode==='local' && localHandle) {
-            // ✨ 本機模式：寫入 assets -> [module] -> images
             const dir = await localHandle.getDirectoryHandle('assets')
                                          .then(d => d.getDirectoryHandle(config.name))
                                          .then(d => d.getDirectoryHandle('images'));
@@ -491,7 +493,78 @@ async function handleGlobalPaste(e) {
 }
 
 // -----------------------------------------------------------
-// 輔助與舊函式保持不變
+// 檔案讀寫
+// -----------------------------------------------------------
+
+async function connectLocalFolder() {
+    if (!('showDirectoryPicker' in window)) return alert("瀏覽器不支援");
+    try {
+        localHandle = await window.showDirectoryPicker();
+        await localHandle.getDirectoryHandle('assets');
+        document.getElementById('local-status').innerText = "✅ 已連接";
+        document.getElementById('local-status').className = "status-tag status-ok";
+        document.getElementById('local-status').style.display = "inline-block";
+    } catch(e) { if(e.name!=='AbortError') alert("連接失敗: "+e.message); }
+}
+
+async function loadLocalFile(lang) {
+    if(!localHandle) return alert("請先連接資料夾");
+    try {
+        currentLang = lang;
+        const fh = await localHandle.getDirectoryHandle('assets')
+                                    .then(d => d.getDirectoryHandle(config.name))
+                                    .then(d => d.getDirectoryHandle('data'))
+                                    .then(d => d.getFileHandle(`data.${lang}.js`));
+        const f = await fh.getFile();
+        const t = await f.text();
+        parseAndRender(t);
+        alert(`已載入 ${config.name}/data.${lang}.js`);
+    } catch(e) { alert("讀取失敗 (請確認資料夾結構)"); }
+}
+
+async function saveData() {
+    if(!currentData) return alert("無資料");
+    const content = `window.${currentVarName} = ${JSON.stringify(currentData, null, 4)};`;
+    if(currentMode === 'local') {
+        if(!localHandle) return alert("請連接資料夾");
+        const fh = await localHandle.getDirectoryHandle('assets')
+                                    .then(d => d.getDirectoryHandle(config.name))
+                                    .then(d => d.getDirectoryHandle('data'))
+                                    .then(d => d.getFileHandle(`data.${currentLang}.js`, {create:true}));
+        const w = await fh.createWritable(); await w.write(content); await w.close();
+        alert("✅ 本機儲存成功");
+    } else {
+        const t = document.getElementById('gh_token').value, u = document.getElementById('gh_user').value, r = document.getElementById('gh_repo').value;
+        const url = `https://api.github.com/repos/${u}/${r}/contents/${config.dataPath}data.${currentLang}.js`;
+        const gr = await fetch(url, { headers: { 'Authorization': `token ${t}` } });
+        let sha = null; if(gr.ok) sha = (await gr.json()).sha;
+        const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Update via Admin', content: btoa(unescape(encodeURIComponent(content))), sha: sha }) });
+        if(res.ok) alert("🎉 GitHub 更新成功"); else alert("GitHub 更新失敗");
+    }
+}
+
+async function loadGithubFile(lang) {
+    const t = document.getElementById('gh_token').value.trim(), u = document.getElementById('gh_user').value.trim(), r = document.getElementById('gh_repo').value.trim();
+    if (!t) return alert("請設定 GitHub");
+    currentLang = lang;
+    try {
+        const url = `https://api.github.com/repos/${u}/${r}/contents/${config.dataPath}data.${lang}.js`;
+        const res = await fetch(url, { headers: { 'Authorization': `token ${t}` } });
+        if(!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        parseAndRender(b64ToUtf8(data.content));
+        alert(`GitHub: 載入成功 (${lang})`);
+    } catch(e) { alert("GitHub 讀取失敗: "+e.message); }
+}
+
+async function uploadImageToGithub(filename, base64) {
+    const t = document.getElementById('gh_token').value, u = document.getElementById('gh_user').value, r = document.getElementById('gh_repo').value;
+    const url = `https://api.github.com/repos/${u}/${r}/contents/${config.imgPath}${filename}`;
+    await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `Upload ${filename}`, content: base64 }) });
+}
+
+// -----------------------------------------------------------
+// 輔助函式
 // -----------------------------------------------------------
 
 function renderTree() {
@@ -620,6 +693,8 @@ function deleteNode() {
         document.getElementById('editor-panel').style.display = 'none';
         renderTree();
         if (currentSubNode) renderQuestionList(currentSubNode);
+        const msg = document.getElementById('empty-editor-msg');
+        if(msg) msg.style.display = 'block';
     }
 }
 function filterQuestionList(val) {
@@ -630,77 +705,12 @@ function filterQuestionList(val) {
         item.style.display = text.includes(val) ? 'block' : 'none';
     });
 }
+function insertText(el, text) { const s = el.selectionStart, e = el.selectionEnd; el.value = el.value.substring(0, s) + text + el.value.substring(e); }
 function b64ToUtf8(b64) { try { const clean = (b64 || "").replace(/\s/g, ""); const bytes = Uint8Array.from(atob(clean), c => c.charCodeAt(0)); return new TextDecoder("utf-8").decode(bytes); } catch (e) { return decodeURIComponent(escape(atob(b64))); } }
 function extractJsonPayload(text) { const t = text.replace(/^\uFEFF/, "").trim(); if (t.startsWith("{") || t.startsWith("[")) return { varName: null, jsonText: t }; let m = t.match(/(?:window\.|const\s+|var\s+|let\s+)(\w+)\s*=\s*(\{[\s\S]*\})\s*;?\s*$/); if (m) return { varName: m[1], jsonText: m[2] }; const fb = t.indexOf('{'), lb = t.lastIndexOf('}'); if (fb !== -1 && lb !== -1) return { varName: "FAQ_DATA_UNKNOWN", jsonText: t.substring(fb, lb + 1) }; throw new Error("無法識別檔案格式"); }
 function switchMode(mode) { currentMode = mode; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active')); const idx = mode === 'local' ? 0 : 1; document.querySelectorAll('.tab-btn')[idx].classList.add('active'); document.getElementById(`panel-${mode}`).classList.add('active'); }
 function loadGhConfig() { try { const conf = JSON.parse(localStorage.getItem('gh_config')); if(conf) { document.getElementById('gh_token').value = conf.token || ''; document.getElementById('gh_user').value = conf.user || ''; document.getElementById('gh_repo').value = conf.repo || ''; } } catch(e) {} }
 function saveGhConfig() { const t = document.getElementById('gh_token').value.trim(), u = document.getElementById('gh_user').value.trim(), r = document.getElementById('gh_repo').value.trim(); localStorage.setItem('gh_config', JSON.stringify({token: t, user: u, repo: r})); alert("設定已儲存"); }
-
-// ✨ loadLocalFile: 加入模組路徑支援
-async function connectLocalFolder() { if (!('showDirectoryPicker' in window)) return alert("瀏覽器不支援"); try { localHandle = await window.showDirectoryPicker(); await localHandle.getDirectoryHandle('assets'); document.getElementById('local-status').innerText = "✅ 已連接"; document.getElementById('local-status').className = "status-tag status-ok"; document.getElementById('local-status').style.display = "inline-block"; } catch(e) { if(e.name!=='AbortError') alert("連接失敗: "+e.message); } }
-async function loadLocalFile(lang) { 
-    if(!localHandle) return alert("請先連接資料夾"); 
-    try { 
-        currentLang = lang; 
-        // ✨ 修改：加入 config.name 層級
-        const fh = await localHandle.getDirectoryHandle('assets')
-                                    .then(d => d.getDirectoryHandle(config.name))
-                                    .then(d => d.getDirectoryHandle('data'))
-                                    .then(d => d.getFileHandle(`data.${lang}.js`)); 
-        const f = await fh.getFile(); 
-        const t = await f.text(); 
-        parseAndRender(t); 
-        alert(`已載入 data.${lang}.js (${config.name})`); 
-    } catch(e) { alert("讀取失敗"); } 
-}
-
-// ✨ loadGithubFile: 加入模組路徑支援
-async function loadGithubFile(lang) { 
-    const t = document.getElementById('gh_token').value.trim(), u = document.getElementById('gh_user').value.trim(), r = document.getElementById('gh_repo').value.trim(); 
-    if (!t) return alert("請設定 GitHub"); 
-    currentLang = lang; 
-    try { 
-        // ✨ 修改：加入 config.dataPath
-        const url = `https://api.github.com/repos/${u}/${r}/contents/${config.dataPath}data.${lang}.js`; 
-        const res = await fetch(url, { headers: { 'Authorization': `token ${t}` } }); 
-        if(!res.ok) throw new Error(res.status); 
-        const data = await res.json(); 
-        parseAndRender(b64ToUtf8(data.content)); 
-        alert(`GitHub: 載入成功 (${lang})`); 
-    } catch(e) { alert("GitHub 讀取失敗: "+e.message); } 
-}
-
-// ✨ saveData: 加入模組路徑支援
-async function saveData() { 
-    if(!currentData) return alert("無資料"); 
-    const content = `window.${currentVarName} = ${JSON.stringify(currentData, null, 4)};`; 
-    if(currentMode === 'local') { 
-        if(!localHandle) return alert("請連接資料夾"); 
-        const fh = await localHandle.getDirectoryHandle('assets')
-                                    .then(d => d.getDirectoryHandle(config.name))
-                                    .then(d => d.getDirectoryHandle('data'))
-                                    .then(d => d.getFileHandle(`data.${currentLang}.js`, {create:true})); 
-        const w = await fh.createWritable(); await w.write(content); await w.close(); 
-        alert("✅ 本機儲存成功"); 
-    } else { 
-        const t = document.getElementById('gh_token').value, u = document.getElementById('gh_user').value, r = document.getElementById('gh_repo').value; 
-        const url = `https://api.github.com/repos/${u}/${r}/contents/${config.dataPath}data.${currentLang}.js`; 
-        const gr = await fetch(url, { headers: { 'Authorization': `token ${t}` } }); 
-        let sha = null; if(gr.ok) sha = (await gr.json()).sha; 
-        const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'Update via Admin', content: btoa(unescape(encodeURIComponent(content))), sha: sha }) }); 
-        if(res.ok) alert("🎉 GitHub 更新成功"); else alert("GitHub 更新失敗"); 
-    } 
-}
-
-// ✨ uploadImageToGithub: 加入模組路徑支援
-async function uploadImageToGithub(filename, base64) { 
-    const t = document.getElementById('gh_token').value, u = document.getElementById('gh_user').value, r = document.getElementById('gh_repo').value; 
-    // 注意：config.imgPath 通常結尾有斜線，這裡直接串接
-    const url = `https://api.github.com/repos/${u}/${r}/contents/${config.imgPath}${filename}`; 
-    await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: `Upload ${filename}`, content: base64 }) }); 
-}
-
-function insertText(el, text) { const s = el.selectionStart, e = el.selectionEnd; el.value = el.value.substring(0, s) + text + el.value.substring(e); }
 function downloadLocalCSV() { const c = generateCSVContent(); if(!c) return alert("無資料"); const b = new Blob([c], { type: 'text/csv;charset=utf-8;' }); const u = URL.createObjectURL(b); const l = document.createElement("a"); l.href = u; l.download = `export_${currentLang}.csv`; document.body.appendChild(l); l.click(); document.body.removeChild(l); }
 function exportToCSV() { if(currentMode === 'local') downloadLocalCSV(); else alert("GitHub 模式請使用「下載 CSV (本機)」按鈕"); }
 function importFromCSV(i) { const f = i.files[0]; if(!f) return; Papa.parse(f, { header: true, skipEmptyLines: true, complete: function(r) { parseCsvRows(r.data); i.value = ""; } }); }
