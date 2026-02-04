@@ -45,6 +45,78 @@ window.FAQ_DATA_ZH = {
                     "questions": [
                         {
                             "id": "PAGE-0649",
+                            "title": "機器人型號選擇",
+                            "content": {
+                                "symptoms": [],
+                                "rootCauses": [],
+                                "solutionSteps": [],
+                                "keywords": [],
+                                "notes": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "SUB-104",
+                    "title": "快捷頁面",
+                    "content": {
+                        "symptoms": [],
+                        "rootCauses": [],
+                        "solutionSteps": [],
+                        "keywords": [],
+                        "notes": ""
+                    },
+                    "questions": [
+                        {
+                            "id": "PAGE-7262",
+                            "title": "登入權限",
+                            "content": {
+                                "symptoms": [],
+                                "rootCauses": [],
+                                "solutionSteps": [],
+                                "keywords": [],
+                                "notes": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "SUB-105",
+                    "title": "裝置頁面",
+                    "content": {
+                        "symptoms": [],
+                        "rootCauses": [],
+                        "solutionSteps": [],
+                        "keywords": [],
+                        "notes": ""
+                    },
+                    "questions": [
+                        {
+                            "id": "PAGE-8888",
+                            "title": "控制器連線",
+                            "content": {
+                                "symptoms": [],
+                                "rootCauses": [],
+                                "solutionSteps": [],
+                                "keywords": [],
+                                "notes": ""
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "SUB-106",
+                    "title": "輔助頁面",
+                    "content": {
+                        "symptoms": [],
+                        "rootCauses": [],
+                        "solutionSteps": [],
+                        "keywords": [],
+                        "notes": ""
+                    },
+                    "questions": [
+                        {
+                            "id": "PAGE-0282",
                             "title": "New Page",
                             "content": {
                                 "symptoms": [],
