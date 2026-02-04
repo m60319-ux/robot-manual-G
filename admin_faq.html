@@ -12,7 +12,6 @@
     <!-- 第一欄：設定與分類樹 -->
     <aside id="admin-sidebar">
         <div style="padding: 10px; background:#f8f9fa; border-bottom:1px solid #ddd;">
-            <!-- ✨ 修改：返回後台入口 -->
             <a href="admin.html" class="btn-back">⬅ 返回後台首頁</a>
         </div>
 
@@ -23,10 +22,10 @@
 
         <!-- 本機面板 -->
         <div id="panel-local" class="mode-panel active">
-            <button class="btn-blue" style="width:100%" onclick="connectLocalFolder()">📁 連接資料夾</button>
+            <button class="btn-blue" style="width:100%" onclick="connectLocalFolder()">📁 1. 連接資料夾</button>
             <div id="local-status" class="status-tag status-err" style="display:none">未連接</div>
             <hr>
-            <label>載入檔案 (JSON)</label>
+            <label>2. 載入語言檔 (JSON)</label>
             <div class="btn-group">
                 <button onclick="loadLocalFile('zh')">繁中</button>
                 <button onclick="loadLocalFile('en')">EN</button>
@@ -62,12 +61,17 @@
                 <button class="btn-gray" style="flex:1" onclick="exportToCSV()">☁️ 匯出 CSV</button>
                 <button class="btn-gray" style="flex:1" onclick="loadCsvFromGithub()">☁️ 載入 CSV</button>
             </div>
-            <!-- 提示當前路徑 -->
             <p style="font-size:11px; color:#666; margin:3px 0 0 0;">* 讀寫位置: assets/faq/data/</p>
         </div>
 
-        <!-- 分類樹 -->
-        <div id="tree-wrapper"><div id="tree-root"></div></div>
+        <!-- 分類樹 (預設顯示提示) -->
+        <div id="tree-wrapper">
+            <div id="tree-root">
+                <p style="padding:20px; color:#999; text-align:center; font-size:14px;">
+                    請先點擊上方按鈕<br>載入資料檔案
+                </p>
+            </div>
+        </div>
     </aside>
 
     <!-- 第二欄：問題列表 -->
@@ -96,6 +100,7 @@
             </div>
         </div>
 
+        <!-- 編輯面板 (預設隱藏) -->
         <div class="card" id="editor-panel" style="display:none;">
             <h2>編輯內容 <span id="node-type" style="font-size:0.5em; background:#eee; padding:2px;"></span></h2>
             
@@ -130,9 +135,14 @@
                 <button class="btn-blue" onclick="applyEdit()">✅ 手動暫存 (Apply)</button>
             </div>
         </div>
+        
+        <!-- 尚未選擇項目時的提示 -->
+        <div id="empty-editor-msg" style="text-align:center; padding:50px; color:#ccc;">
+            👈 請從左側列表選擇項目以編輯
+        </div>
     </main>
 
-    <!-- ✨✨✨ 關鍵設定：指定本頁面管理 'faq' 模組 ✨✨✨ -->
+    <!-- 關鍵：模組設定 -->
     <script>
         window.ModuleConfig = {
             name: 'faq',
