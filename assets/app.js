@@ -1,383 +1,121 @@
-// assets/app.js - V4.1 Module-Specific UI Labels
-let currentLang = 'zh';
-let faqData = {}; 
-let fuse; 
-let activeSub = null;
-let activeQ = null;   
-
-const currentModule = window.CurrentModule || 'faq';
-
-const DATA_VAR_MAP = {
-    'zh': 'FAQ_DATA_ZH', 'cn': 'FAQ_DATA_CN', 'en': 'FAQ_DATA_EN', 'th': 'FAQ_DATA_TH'
-};
-
-const SEARCH_KEYS = ['id', 'title', 'content.keywords', 'content.symptoms'];
-
-// ✨✨✨ 修改：區分 FAQ 與 Manual 的顯示標籤 ✨✨✨
-const UI_LABELS = {
-    'faq': {
-        'zh': { label1: '🛑 異常徵兆 (Symptoms)', label2: '🔍 可能原因 (Root Causes)', label3: '🛠️ 排查與解決 (Solution)', note: '備註' },
-        'cn': { label1: '🛑 异常征兆 (Symptoms)', label2: '🔍 可能原因 (Root Causes)', label3: '🛠️ 排查与解决 (Solution)', note: '备注' },
-        'en': { label1: '🛑 Symptoms', label2: '🔍 Root Causes', label3: '🛠️ Solution', note: 'Note' },
-        'th': { label1: '🛑 อาการ (Symptoms)', label2: '🔍 สาเหตุ (Root Causes)', label3: '🛠️ วิธีแก้ไข (Solution)', note: 'หมายเหตุ' }
-    },
-    'manual': {
-        'zh': { label1: '📝 功能概述 (Description)', label2: '⚙️ 詳細參數 (Details)', label3: '👣 操作步驟 (Steps)', note: '備註' },
-        'cn': { label1: '📝 功能概述 (Description)', label2: '⚙️ 详细参数 (Details)', label3: '👣 操作步骤 (Steps)', note: '备注' },
-        'en': { label1: '📝 Description', label2: '⚙️ Details', label3: '👣 Steps', note: 'Note' },
-        'th': { label1: '📝 คำอธิบาย (Description)', label2: '⚙️ รายละเอียด (Details)', label3: '👣 ขั้นตอน (Steps)', note: 'หมายเหตุ' }
-    }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const langParam = urlParams.get('lang');
-    if (langParam && DATA_VAR_MAP[langParam]) {
-        currentLang = langParam;
-    }
-
-    loadDataScripts().then(() => {
-        initApp();
-    });
-
-    document.getElementById('search-input').addEventListener('input', (e) => {
-        handleSearch(e.target.value);
-    });
-
-    window.addEventListener('click', () => {
-        const menu = document.getElementById('lang-menu');
-        if (menu) menu.classList.remove('show');
-    });
-});
-
-window.toggleLangMenu = function(e) {
-    e.stopPropagation(); 
-    document.getElementById('lang-menu').classList.toggle('show');
-}
-
-function loadDataScripts() {
-    const langs = ['zh', 'cn', 'en', 'th'];
-    const version = new Date().getTime();
-    const promises = langs.map(lang => {
-        return new Promise((resolve) => {
-            const script = document.createElement('script');
-            script.src = `assets/${currentModule}/data/data.${lang}.js?v=${version}`;
-            script.onload = resolve;
-            script.onerror = resolve; 
-            document.body.appendChild(script);
-        });
-    });
-    return Promise.all(promises);
-}
-
-function initApp() {
-    const varName = DATA_VAR_MAP[currentLang];
-    if (window[varName]) {
-        faqData = window[varName];
-        renderSidebar();
-        initSearchIndex();
-        updateLangButtons();
-    } else {
-        document.getElementById('sidebar').innerHTML = '<p style="padding:20px">載入資料失敗</p>';
-    }
-}
-
-function setLang(lang) {
-    const currentQId = activeQ ? activeQ.id : null;
-    currentLang = lang;
-    const url = new URL(window.location);
-    url.searchParams.set('lang', lang);
-    window.history.pushState({}, '', url);
-
-    initApp();
-    
-    if (currentQId) {
-        const result = findPathById(currentQId);
-        if (result) {
-            activeQ = result.q;
-            activeSub = result.sub;
-            renderContent(result.q);
-            loadQuestions(result.sub);
-            highlightSidebar(result.cat.id, result.sub.id);
-        } else {
-            resetToWelcome();
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <!-- 強制寬度 1280px，讓手機版自動縮放 -->
+    <meta name="viewport" content="width=1280">
+    <title>軟體操作手冊 | Robot Manual</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="icon" href="data:,">
+    <!-- 引入 Fuse.js 搜尋引擎 -->
+    <script src="assets/libs/fuse.min.js"></script>
+    <style>
+        /* ✨✨✨ 特別樣式調整：移除綠色圓點 ✨✨✨ */
+        /* 覆蓋 styles.css 中 .step-item::before 的設定 */
+        .step-item::before {
+            content: none !important; /* 移除圓點符號 */
         }
-    } else {
-        resetToWelcome();
-    }
-    document.getElementById('lang-menu').classList.remove('show');
-}
-
-function resetToWelcome() {
-    document.getElementById('question-list').innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999;">請點選左側<br>📂 子分類</div>';
-    document.getElementById('content-display').innerHTML = '<div style="text-align:center; margin-top:100px; color:#aaa;"><h2>👋 Welcome</h2></div>';
-}
-
-function updateLangButtons() {
-    document.querySelectorAll('.lang-option').forEach(opt => opt.classList.remove('active'));
-    const activeOpt = document.getElementById(`opt-${currentLang}`);
-    if(activeOpt) activeOpt.classList.add('active');
-}
-
-function findPathById(qId) {
-    if (!faqData.categories) return null;
-    for (const cat of faqData.categories) {
-        if (cat.subcategories) {
-            for (const sub of cat.subcategories) {
-                if (sub.questions) {
-                    const q = sub.questions.find(item => item.id === qId);
-                    if (q) return { cat, sub, q };
-                }
-            }
+        .step-item {
+            padding-left: 0 !important; /* 移除原本為了圓點預留的左側內距 */
         }
-    }
-    return null;
-}
+    </style>
+</head>
+<body>
 
-function highlightSidebar(catId, subId) {
-    const catEl = document.querySelector(`.category-item[data-id="${catId}"]`);
-    if (catEl) {
-        document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
-        catEl.classList.add('active');
-    }
-    const subEl = document.querySelector(`.sub-item[data-id="${subId}"]`);
-    if (subEl) {
-        document.querySelectorAll('.sub-item').forEach(s => s.classList.remove('active'));
-        subEl.classList.add('active');
-    }
-}
-
-function renderSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.innerHTML = '';
-
-    if (!faqData.categories) return;
-
-    faqData.categories.forEach((cat) => {
-        const catDiv = document.createElement('div');
-        catDiv.className = 'category-item';
-        catDiv.textContent = cat.title || cat.id;
-        catDiv.dataset.id = cat.id;
+<header>
+    <div class="logo-section">
+        <!-- 回入口首頁按鈕 -->
+        <a href="index.html" style="text-decoration:none; margin-right:15px; font-size:24px;" title="回入口首頁">🏠</a>
         
-        const subList = document.createElement('div');
-        subList.className = 'subcategory-list';
-
-        if (cat.subcategories) {
-            cat.subcategories.forEach(sub => {
-                const subDiv = document.createElement('div');
-                subDiv.className = 'sub-item';
-                subDiv.textContent = sub.title || sub.id;
-                subDiv.dataset.id = sub.id;
-                
-                if (activeSub && activeSub.id === sub.id) subDiv.classList.add('active');
-
-                subDiv.onclick = (e) => {
-                    e.stopPropagation();
-                    renderContent(sub); 
-                    loadQuestions(sub, subDiv);
-                };
-                subList.appendChild(subDiv);
-            });
-        }
-
-        catDiv.onclick = () => {
-            document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
-            catDiv.classList.add('active');
-            renderContent(cat);
-            document.getElementById('question-list').innerHTML = '<div style="padding:20px; text-align:center; color:#999;">請選擇子章節</div>';
-        };
-
-        sidebar.appendChild(catDiv);
-        sidebar.appendChild(subList);
-    });
-}
-
-function loadQuestions(sub, subDivElement) {
-    activeSub = sub;
+        <!-- Logo -->
+        <img src="assets/images/logo.png" alt="Logo" class="header-logo" 
+             onerror="this.style.display='none'; document.getElementById('fallback-icon').style.display='block';">
+        <span id="fallback-icon" style="display:none; font-size:24px; margin-right:10px;">📖</span>
+        
+        <h1>軟體操作手冊</h1>
+    </div>
     
-    if(subDivElement) {
-        document.querySelectorAll('.sub-item').forEach(el => el.classList.remove('active'));
-        subDivElement.classList.add('active');
-    }
-
-    const listPanel = document.getElementById('question-list');
-    listPanel.innerHTML = '';
-
-    if (!sub.questions || sub.questions.length === 0) {
-        listPanel.innerHTML = '<div style="padding:20px; text-align:center;">(無頁面)</div>';
-        return;
-    }
-
-    sub.questions.forEach(q => {
-        createQuestionItem(q, listPanel);
-    });
-}
-
-function createQuestionItem(q, container, showPath = false) {
-    const item = document.createElement('div');
-    item.className = 'q-item';
-    
-    if (activeQ && activeQ.id === q.id) item.classList.add('active');
-    
-    let html = `<span class="q-title">${q.title}</span>`;
-    if (showPath) {
-        html += `<div style="font-size:0.8rem; color:#666; margin-bottom:4px;">${q.path || ''}</div>`;
-    }
-    html += `<span class="q-id">${q.id}</span>`;
-    
-    item.innerHTML = html;
-    item.onclick = () => {
-        activeQ = q;
-        document.querySelectorAll('.q-item').forEach(el => el.classList.remove('active'));
-        item.classList.add('active');
-        renderContent(q);
-    };
-    container.appendChild(item);
-}
-
-// ✨✨✨ 修改：根據模組選取正確標籤 ✨✨✨
-function renderContent(node) {
-    const display = document.getElementById('content-display');
-    const c = node.content || {}; 
-    
-    // 根據 currentModule 選擇 FAQ 或 Manual 的標籤組
-    const moduleLabels = UI_LABELS[currentModule] || UI_LABELS['faq'];
-    const labels = moduleLabels[currentLang] || moduleLabels['en'];
-
-    const processText = (text) => {
-        if (!text) return "";
-        return text.replace(/{{img:(.*?)}}/g, (match, path) => {
-            return `<div class="img-container img-size-medium"><img src="${path}" onclick="openFullscreen(this.src)"></div>`;
-        });
-    };
-
-    const renderList = (arr) => {
-        if (!arr || arr.length === 0) return '無';
-        return arr.map(item => `<div class="step-item">${processText(item)}</div>`).join('');
-    };
-
-    const keywordsHtml = (c.keywords || []).map(k => `<span class="keyword-tag">#${k}</span>`).join('');
-
-    // 注意：這裡將 key 對應到了 label1, label2, label3
-    // FAQ: label1=Symptoms, label2=Causes, label3=Solution
-    // Manual: label1=Description, label2=Details, label3=Steps
-    
-    display.innerHTML = `
-        <div class="content-card">
-            <h1 style="color:#2c3e50; margin-bottom:10px;">${node.title}</h1>
-            <div style="color:#888; font-size:0.9em; margin-bottom:15px;">ID: ${node.id}</div>
-            <div style="margin-bottom:25px;">${keywordsHtml}</div>
-
-            <h3 class="section-title" style="color:#0056b3;">${labels.label1}</h3>
-            <div class="info-block symptoms">
-                ${renderList(c.symptoms)}
-            </div>
-
-            <!-- 手冊模式下，通常 Steps 放最後，或者 Details 放最後，這邊依照 Admin 介面順序微調 -->
-            <!-- 假設 admin_manual 順序是: 1.概述 2.步驟 3.參數 -->
-            <!-- 我們的 Data Structure 對應: symptoms=概述, solutionSteps=步驟, rootCauses=參數 -->
-            
-            ${currentModule === 'manual' ? `
-                <h3 class="section-title" style="color:#0056b3;">${labels.label3}</h3>
-                <div class="info-block steps">
-                    ${renderList(c.solutionSteps)}
-                </div>
-
-                <h3 class="section-title" style="color:#0056b3;">${labels.label2}</h3>
-                <div class="info-block causes">
-                    ${renderList(c.rootCauses)}
-                </div>
-            ` : `
-                <!-- FAQ 模式維持原樣 -->
-                <h3 class="section-title" style="color:#e74c3c;">${labels.label2}</h3>
-                <div class="info-block causes">
-                    ${renderList(c.rootCauses)}
-                </div>
-
-                <h3 class="section-title" style="color:#27ae60;">${labels.label3}</h3>
-                <div class="info-block steps">
-                    ${renderList(c.solutionSteps)}
-                </div>
-            `}
-
-            ${c.notes ? `<div style="margin-top:30px; padding:15px; background:#fff3cd; border-radius:4px; color:#856404;">📝 <b>${labels.note}:</b><br>${processText(c.notes)}</div>` : ''}
+    <!-- Header 右側控制區 (搜尋 & 語言 & 設定) -->
+    <div class="header-controls">
+        <!-- 1. 搜尋欄 -->
+        <div class="header-search">
+            <input type="text" id="search-input" placeholder="🔍 搜尋章節、關鍵字...">
         </div>
-    `;
-}
 
-function initSearchIndex() {
-    if (typeof Fuse === 'undefined') return;
+        <!-- 2. 語言選擇 (地球圖示) -->
+        <div class="lang-dropdown">
+            <button onclick="toggleLangMenu(event)" class="lang-btn" title="切換語言">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+            </button>
+            <div id="lang-menu" class="lang-menu">
+                <div onclick="setLang('zh')" class="lang-option" id="opt-zh">繁體中文</div>
+                <div onclick="setLang('cn')" class="lang-option" id="opt-cn">简体中文</div>
+                <div onclick="setLang('en')" class="lang-option" id="opt-en">English</div>
+                <div onclick="setLang('th')" class="lang-option" id="opt-th">ไทย</div>
+            </div>
+        </div>
+
+        <!-- 3. 管理後台按鈕 -->
+        <button onclick="checkAdminPass()" class="btn-admin-entry" title="進入管理後台">⚙️ 管理</button>
+    </div>
+</header>
+
+<!-- 三欄式主內容區 -->
+<div class="container">
     
-    let allQuestions = [];
-    if (faqData.categories) {
-        faqData.categories.forEach(cat => {
-            if (cat.subcategories) {
-                cat.subcategories.forEach(sub => {
-                    if (sub.questions) {
-                        sub.questions.forEach(q => {
-                            allQuestions.push({
-                                ...q,
-                                path: `${cat.title} > ${sub.title}`
-                            });
-                        });
-                    }
-                });
-            }
-        });
-    }
+    <!-- 第一欄：章節導覽 (主章節 > 子章節) -->
+    <div class="sidebar" id="sidebar">
+        <!-- JS 動態生成 -->
+    </div>
 
-    const options = {
-        keys: SEARCH_KEYS,
-        threshold: 0.3, 
-        useExtendedSearch: true,
-        ignoreLocation: true,
-        findAllMatches: true
-    };
-    fuse = new Fuse(allQuestions, options);
-}
+    <!-- 第二欄：頁面列表 (頁面) -->
+    <div class="question-list-panel" id="list-panel">
+        <div id="question-list">
+            <div style="padding:40px 20px; text-align:center; color:#999;">
+                請點選左側<br>📂 子章節
+            </div>
+        </div>
+    </div>
 
-function handleSearch(keyword) {
-    const listPanel = document.getElementById('question-list');
-    
-    if (!keyword || !keyword.trim()) {
-        if (activeSub) {
-            loadQuestions(activeSub);
-        } else {
-            listPanel.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999;">請點選左側<br>📂 子分類</div>';
+    <!-- 第三欄：詳細內容 -->
+    <div class="content-panel" id="content-display">
+        <div style="text-align:center; margin-top:100px; color:#aaa;">
+            <h2>👋 歡迎閱讀操作手冊</h2>
+            <p>請選擇章節以查看詳細說明</p>
+        </div>
+    </div>
+</div>
+
+<!-- 圖片全螢幕預覽容器 -->
+<div class="fullscreen-overlay" id="fs-overlay" onclick="closeFullscreen()">
+    <img id="fs-img" src="">
+</div>
+
+<!-- ✨✨✨ 關鍵設定：指定模組為 'manual' ✨✨✨ -->
+<!-- 這會讓 app.js 去讀取 assets/manual/data/ 下的檔案 -->
+<script>
+    window.CurrentModule = 'manual'; 
+</script>
+
+<!-- 載入主程式 -->
+<script src="assets/app.js"></script>
+
+<!-- 管理員登入檢查 -->
+<script>
+    function checkAdminPass() {
+        const password = prompt("請輸入管理員密碼：");
+        if (password === "DeltaFAE") {
+            // 導向後台入口
+            window.location.href = "admin.html"; 
+        } else if (password !== null) {
+            alert("❌ 密碼錯誤！");
         }
-        return;
     }
+</script>
 
-    const terms = keyword.replace(/　/g, ' ')
-                         .split(/[\s,\u3001/\\]+/)
-                         .filter(t => t.trim().length > 0);
-    
-    const logicQuery = {
-        $and: terms.map(term => ({
-            $or: SEARCH_KEYS.map(key => ({ [key]: term }))
-        }))
-    };
-
-    const results = fuse.search(logicQuery);
-    listPanel.innerHTML = '';
-
-    if (results.length === 0) {
-        listPanel.innerHTML = '<div style="padding:20px; text-align:center;">查無結果</div>';
-        return;
-    }
-
-    results.forEach(res => {
-        createQuestionItem(res.item, listPanel, true);
-    });
-}
-
-window.openFullscreen = function(src) {
-    const overlay = document.getElementById('fs-overlay');
-    const img = document.getElementById('fs-img');
-    img.src = src;
-    overlay.classList.add('show');
-}
-
-window.closeFullscreen = function() {
-    document.getElementById('fs-overlay').classList.remove('show');
-}
+</body>
+</html>
