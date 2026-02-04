@@ -1,4 +1,4 @@
-// assets/app.js - V4.1 Module-Specific UI Labels
+// assets/app.js - V4.2 Enhanced Search for Categories & Subcategories
 let currentLang = 'zh';
 let faqData = {}; 
 let fuse; 
@@ -140,10 +140,16 @@ function highlightSidebar(catId, subId) {
         document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
         catEl.classList.add('active');
     }
-    const subEl = document.querySelector(`.sub-item[data-id="${subId}"]`);
-    if (subEl) {
+    // subId 可能是 null (如果選中的是主章節)
+    if (subId) {
+        const subEl = document.querySelector(`.sub-item[data-id="${subId}"]`);
+        if (subEl) {
+            document.querySelectorAll('.sub-item').forEach(s => s.classList.remove('active'));
+            subEl.classList.add('active');
+        }
+    } else {
+        // 如果沒有 subId，清除所有子選單的 active
         document.querySelectorAll('.sub-item').forEach(s => s.classList.remove('active'));
-        subEl.classList.add('active');
     }
 }
 
@@ -184,6 +190,7 @@ function renderSidebar() {
             document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
             catDiv.classList.add('active');
             renderContent(cat);
+            // 點擊分類時，清空問題列表或顯示提示
             document.getElementById('question-list').innerHTML = '<div style="padding:20px; text-align:center; color:#999;">請選擇子章節</div>';
         };
 
@@ -219,7 +226,12 @@ function createQuestionItem(q, container, showPath = false) {
     
     if (activeQ && activeQ.id === q.id) item.classList.add('active');
     
-    let html = `<span class="q-title">${q.title}</span>`;
+    // 根據類型顯示前綴 (如果是搜尋結果)
+    let titlePrefix = '';
+    if (showPath && q.type === 'category') titlePrefix = '【章節】 ';
+    if (showPath && q.type === 'subcategory') titlePrefix = '【子章節】 ';
+
+    let html = `<span class="q-title">${titlePrefix}${q.title}</span>`;
     if (showPath) {
         html += `<div style="font-size:0.8rem; color:#666; margin-bottom:4px;">${q.path || ''}</div>`;
     }
@@ -230,7 +242,15 @@ function createQuestionItem(q, container, showPath = false) {
         activeQ = q;
         document.querySelectorAll('.q-item').forEach(el => el.classList.remove('active'));
         item.classList.add('active');
+        
+        // 渲染內容
         renderContent(q);
+
+        // ✨✨✨ 同步 Sidebar 高亮 (特別是從搜尋結果點擊時) ✨✨✨
+        // q.catId 和 q.subId 是在 initSearchIndex 中加入的
+        if (q.catId) {
+            highlightSidebar(q.catId, q.subId);
+        }
     };
     container.appendChild(item);
 }
@@ -257,10 +277,6 @@ function renderContent(node) {
     };
 
     const keywordsHtml = (c.keywords || []).map(k => `<span class="keyword-tag">#${k}</span>`).join('');
-
-    // 注意：這裡將 key 對應到了 label1, label2, label3
-    // FAQ: label1=Symptoms, label2=Causes, label3=Solution
-    // Manual: label1=Description, label2=Details, label3=Steps
     
     display.innerHTML = `
         <div class="content-card">
@@ -272,10 +288,6 @@ function renderContent(node) {
             <div class="info-block symptoms">
                 ${renderList(c.symptoms)}
             </div>
-
-            <!-- 手冊模式下，通常 Steps 放最後，或者 Details 放最後，這邊依照 Admin 介面順序微調 -->
-            <!-- 假設 admin_manual 順序是: 1.概述 2.步驟 3.參數 -->
-            <!-- 我們的 Data Structure 對應: symptoms=概述, solutionSteps=步驟, rootCauses=參數 -->
             
             ${currentModule === 'manual' ? `
                 <h3 class="section-title" style="color:#0056b3;">${labels.label3}</h3>
@@ -288,7 +300,6 @@ function renderContent(node) {
                     ${renderList(c.rootCauses)}
                 </div>
             ` : `
-                <!-- FAQ 模式維持原樣 -->
                 <h3 class="section-title" style="color:#e74c3c;">${labels.label2}</h3>
                 <div class="info-block causes">
                     ${renderList(c.rootCauses)}
@@ -308,16 +319,40 @@ function renderContent(node) {
 function initSearchIndex() {
     if (typeof Fuse === 'undefined') return;
     
-    let allQuestions = [];
+    let allItems = []; // 改名為 allItems 以反映包含 CAT/SUB
     if (faqData.categories) {
         faqData.categories.forEach(cat => {
+            // 1. 加入 Category 本身
+            allItems.push({
+                ...cat,
+                type: 'category',
+                path: '章節', // 用於在搜尋結果顯示層級
+                catId: cat.id,
+                subId: null,
+                content: cat.content || {} // 確保搜尋 content 欄位時不報錯
+            });
+
             if (cat.subcategories) {
                 cat.subcategories.forEach(sub => {
+                    // 2. 加入 Subcategory 本身
+                    allItems.push({
+                        ...sub,
+                        type: 'subcategory',
+                        path: `${cat.title || cat.id}`,
+                        catId: cat.id,
+                        subId: sub.id,
+                        content: sub.content || {}
+                    });
+
                     if (sub.questions) {
                         sub.questions.forEach(q => {
-                            allQuestions.push({
+                            // 3. 加入 Question
+                            allItems.push({
                                 ...q,
-                                path: `${cat.title} > ${sub.title}`
+                                type: 'question',
+                                path: `${cat.title || cat.id} > ${sub.title || sub.id}`,
+                                catId: cat.id,
+                                subId: sub.id
                             });
                         });
                     }
@@ -333,7 +368,7 @@ function initSearchIndex() {
         ignoreLocation: true,
         findAllMatches: true
     };
-    fuse = new Fuse(allQuestions, options);
+    fuse = new Fuse(allItems, options);
 }
 
 function handleSearch(keyword) {
