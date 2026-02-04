@@ -11,7 +11,14 @@ window.FAQ_DATA_ZH = {
                 {
                     "id": "SUB-101",
                     "title": "馬達異常",
-                    "questions": []
+                    "questions": [],
+                    "content": {
+                        "symptoms": [],
+                        "rootCauses": [],
+                        "solutionSteps": [],
+                        "keywords": [],
+                        "notes": ""
+                    }
                 },
                 {
                     "id": "SUB-102",
