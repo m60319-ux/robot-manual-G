@@ -1,0 +1,22 @@
+<!-- ... 前面 header ... -->
+<body class="admin-mode">
+    <aside id="admin-sidebar">
+        <div style="padding: 10px; background:#f8f9fa; border-bottom:1px solid #ddd;">
+            <a href="admin.html" class="btn-back">⬅ 返回後台首頁</a>
+        </div>
+        <!-- ... 中間省略 ... -->
+        <!-- GitHub 說明文字修正 -->
+        <p style="font-size:11px; color:#666; margin:3px 0 0 0;">* 讀寫位置: assets/faq/data/</p>
+    </aside>
+    <!-- ... 中間省略 ... -->
+    <script>
+        // ✨ 設定此頁面的模組路徑
+        window.ModuleConfig = {
+            name: 'faq',
+            dataPath: 'assets/faq/data/',
+            imgPath: 'assets/faq/images/'
+        };
+    </script>
+    <script src="assets/admin.js"></script>
+</body>
+</html>
