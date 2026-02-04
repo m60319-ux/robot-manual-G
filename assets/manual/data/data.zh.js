@@ -6,11 +6,11 @@ window.FAQ_DATA_ZH = {
     "categories": [
         {
             "id": "CAT-01",
-            "title": "1.軟體介紹",
+            "title": "軟體介紹",
             "subcategories": [
                 {
                     "id": "SUB-101",
-                    "title": "1.1環境需求",
+                    "title": "環境需求",
                     "questions": [],
                     "content": {
                         "symptoms": [
@@ -24,7 +24,7 @@ window.FAQ_DATA_ZH = {
                 },
                 {
                     "id": "SUB-102",
-                    "title": "1.2畫面說明",
+                    "title": "畫面說明",
                     "questions": [],
                     "content": {
                         "symptoms": [
@@ -45,7 +45,7 @@ window.FAQ_DATA_ZH = {
                 },
                 {
                     "id": "SUB-103",
-                    "title": "1.3初始頁面",
+                    "title": "初始頁面",
                     "content": {
                         "symptoms": [
                             "初始頁面為軟體剛開啟時的畫面，點擊頁面左側選單中的各個分頁，即可操作各軟體功能。選單中的各個分頁功能，將於後續的章節介紹。",
@@ -61,7 +61,7 @@ window.FAQ_DATA_ZH = {
                     "questions": [
                         {
                             "id": "PAGE-0649",
-                            "title": "1.3.1機器人型號選擇",
+                            "title": "機器人型號選擇",
                             "content": {
                                 "symptoms": [],
                                 "rootCauses": [],
@@ -83,26 +83,27 @@ window.FAQ_DATA_ZH = {
                 },
                 {
                     "id": "SUB-104",
-                    "title": "1.4快捷頁面",
+                    "title": "快捷頁面",
                     "content": {
                         "symptoms": [
                             "操作頁面位於軟體畫面上方，主要是讓使用者可以快速的察看機器人目前的狀態及操作功能。",
                             "1. 操作分頁",
                             "{{img:assets/manual/images/img_1770195031612.png}}",
                             "{{img:assets/manual/images/img_1770195066134.png}}{{img:assets/manual/images/img_1770195050608.png}}",
-                            "2. 檢視分頁",
-                            "{{img:assets/manual/images/img_1770195096154.png}} ",
-                            "{{img:assets/manual/images/img_1770195109417.png}}"
+                            "2. 檢視分頁"
                         ],
                         "rootCauses": [],
-                        "solutionSteps": [],
+                        "solutionSteps": [
+                            "{{img:assets/manual/images/img_1770195096154.png}}",
+                            "{{img:assets/manual/images/img_1770195109417.png}}"
+                        ],
                         "keywords": [],
                         "notes": ""
                     },
                     "questions": [
                         {
                             "id": "PAGE-7262",
-                            "title": "1.4.1 登入權限",
+                            "title": "登入權限",
                             "content": {
                                 "symptoms": [],
                                 "rootCauses": [],
@@ -122,7 +123,7 @@ window.FAQ_DATA_ZH = {
                 },
                 {
                     "id": "SUB-105",
-                    "title": "1.5裝置頁面",
+                    "title": "裝置頁面",
                     "content": {
                         "symptoms": [
                             "裝置頁面會在軟體畫面的左邊顯示，提供各個功能會顯示在中間的顯示頁面中。",
@@ -137,7 +138,7 @@ window.FAQ_DATA_ZH = {
                     "questions": [
                         {
                             "id": "PAGE-8888",
-                            "title": "1.5.1控制器連線",
+                            "title": "控制器連線",
                             "content": {
                                 "symptoms": [
                                     "在「Controller」頁籤按右鍵，可讀取機器人控制器的內容資訊。"
@@ -161,7 +162,7 @@ window.FAQ_DATA_ZH = {
                 },
                 {
                     "id": "SUB-106",
-                    "title": "1.6輔助頁面",
+                    "title": "輔助頁面",
                     "content": {
                         "symptoms": [
                             "會在軟體畫面的右邊顯示輔助頁面，提供可輔助操作主頁面選單的各個功能。"
@@ -174,7 +175,7 @@ window.FAQ_DATA_ZH = {
                     "questions": [
                         {
                             "id": "PAGE-0282",
-                            "title": "1.6.1吋動",
+                            "title": "吋動",
                             "content": {
                                 "symptoms": [
                                     "在「快捷頁面」中，點選「吋動」按鈕，會在右邊「輔助頁面」中，顯示「吋動」操作頁面。"
